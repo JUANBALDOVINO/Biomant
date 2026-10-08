@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMMS BioMant - Clínica de los Ríos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        clinica: {
+                            50: '#f0f7f7',
+                            100: '#d9ecec',
+                            500: '#0d7377',
+                            600: '#0a5c5f',
+                            800: '#0f3d3e',
+                            900: '#0b2c2d'
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800 antialiased">
+    <header class="bg-clinica-900 text-white shadow-lg">
+        <div class="mx-auto flex max-w-7xl flex-col gap-6 px-6 py-8 md:flex-row md:items-center md:justify-between">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-teal-200">Inventario clínico</p>
+                <h1 class="mt-1 text-2xl font-bold md:text-3xl">CMMS BioMant - Clínica de los Ríos</h1>
+                <p class="mt-2 max-w-xl text-sm text-slate-300">Panel de equipos biomédicos y de tecnología. Datos en tiempo real desde la API local.</p>
+            </div>
+            <div id="resumen" class="grid grid-cols-3 gap-3 text-center">
+                <div class="rounded-xl bg-white/10 px-4 py-3 backdrop-blur">
+                    <p class="text-2xl font-bold" id="total-equipos">—</p>
+                    <p class="text-xs uppercase tracking-wide text-slate-300">Total</p>
+                </div>
+                <div class="rounded-xl bg-emerald-500/20 px-4 py-3">
+                    <p class="text-2xl font-bold text-emerald-200" id="total-operativos">—</p>
+                    <p class="text-xs uppercase tracking-wide text-slate-300">Operativos</p>
+                </div>
+                <div class="rounded-xl bg-amber-500/20 px-4 py-3">
+                    <p class="text-2xl font-bold text-amber-200" id="total-mantenimiento">—</p>
+                    <p class="text-xs uppercase tracking-wide text-slate-300">Mantenimiento</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="mx-auto max-w-7xl px-6 py-8">
+
+        <!-- Formulario para agregar nuevo equipo -->
+        <section class="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 class="text-lg font-semibold text-clinica-800 mb-4">Registrar Nuevo Equipo</h2>
+            <form id="form-nuevo-equipo" class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <input type="text" id="id_equipo" placeholder="ID (Ej. BIO-301)" required class="rounded-xl border border-slate-200 bg-slate-50 py-2 px-3 text-sm outline-none focus:border-clinica-500 focus:bg-white focus:ring-2 ring-clinica-500">
+                <input type="text" id="nombre_equipo" placeholder="Nombre del equipo" required class="rounded-xl border border-slate-200 bg-slate-50 py-2 px-3 text-sm outline-none focus:border-clinica-500 focus:bg-white focus:ring-2 ring-clinica-500">
+                <input type="text" id="marca" placeholder="Marca" required class="rounded-xl border border-slate-200 bg-slate-50 py-2 px-3 text-sm outline-none focus:border-clinica-500 focus:bg-white focus:ring-2 ring-clinica-500">
+                <input type="text" id="modelo" placeholder="Modelo" required class="rounded-xl border border-slate-200 bg-slate-50 py-2 px-3 text-sm outline-none focus:border-clinica-500 focus:bg-white focus:ring-2 ring-clinica-500">
+                <input type="text" id="numero_serie" placeholder="Número de serie" required class="rounded-xl border border-slate-200 bg-slate-50 py-2 px-3 text-sm outline-none focus:border-clinica-500 focus:bg-white focus:ring-2 ring-clinica-500">
+                <select id="nivel_riesgo" required class="rounded-xl border border-slate-200 bg-slate-50 py-2 px-3 text-sm outline-none focus:border-clinica-500 focus:bg-white focus:ring-2 ring-clinica-500">
+                    <option value="">Nivel de Riesgo...</option>
+                    <option value="I">I (Bajo)</option>
+                    <option value="IIA">IIA (Moderado)</option>
+                    <option value="IIB">IIB (Alto)</option>
+                    <option value="III">III (Muy Alto)</option>
+                </select>
+                <input type="text" id="ubicacion" placeholder="Ubicación" required class="rounded-xl border border-slate-200 bg-slate-50 py-2 px-3 text-sm outline-none focus:border-clinica-500 focus:bg-white focus:ring-2 ring-clinica-500">
+                <select id="estado" required class="rounded-xl border border-slate-200 bg-slate-50 py-2 px-3 text-sm outline-none focus:border-clinica-500 focus:bg-white focus:ring-2 ring-clinica-500">
+                    <option value="Operativo">Operativo</option>
+                    <option value="En Mantenimiento">En Mantenimiento</option>
+                    <option value="Fuera de servicio">Fuera de servicio</option>
+                </select>
+                <select id="tipo_categoria" required class="rounded-xl border border-slate-200 bg-slate-50 py-2 px-3 text-sm outline-none focus:border-clinica-500 focus:bg-white focus:ring-2 ring-clinica-500">
+                    <option value="Biomédico">Biomédico</option>
+                    <option value="Tecnología">Tecnología</option>
+                </select>
+                <div class="md:col-span-3 flex justify-end mt-2">
+                    <button type="submit" class="rounded-xl bg-clinica-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-clinica-500">
+                        Guardar Equipo
+                    </button>
+                </div>
+            </form>
+        </section>
+        
+        <section class="mb-6 flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:flex-row md:items-center md:justify-between">
+            <div>
+                <h2 class="text-lg font-semibold text-clinica-800">Inventario de equipos</h2>
+                <p id="estado-carga" class="text-sm text-slate-500">Cargando inventario…</p>
+            </div>
+            <div class="flex w-full flex-col gap-3 sm:flex-row md:w-auto">
+                <label class="relative flex-1 md:w-80">
+                    <span class="sr-only">Buscar equipos</span>
+                    <input
+                        id="busqueda"
+                        type="search"
+                        placeholder="Buscar por ID, nombre, marca, ubicación…"
+                        class="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm outline-none ring-clinica-500 transition focus:border-clinica-500 focus:bg-white focus:ring-2"
+                    >
+                    <svg class="pointer-events-none absolute left-3 top-2.5 h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z" />
+                    </svg>
+                </label>
+                <button
+                    id="btn-actualizar"
+                    type="button"
+                    class="rounded-xl bg-clinica-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-clinica-500"
+                >
+                    Actualizar
+                </button>
+            </div>
+        </section>
+
+        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-left text-sm">
+                    <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                        <tr>
+                            <th class="px-4 py-3 font-semibold">ID</th>
+                            <th class="px-4 py-3 font-semibold">Nombre</th>
+                            <th class="px-4 py-3 font-semibold">Marca</th>
+                            <th class="px-4 py-3 font-semibold">Modelo</th>
+                            <th class="px-4 py-3 font-semibold">Ubicación</th>
+                            <th class="px-4 py-3 font-semibold">Estado</th>
+                            <th class="px-4 py-3 font-semibold">Categoría</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-equipos" class="divide-y divide-slate-100">
+                    </tbody>
+                </table>
+            </div>
+            <p id="sin-resultados" class="hidden px-4 py-10 text-center text-sm text-slate-500">No hay equipos que coincidan con la búsqueda.</p>
+        </section>
+    </main>
+
+    <!-- Modal de Detalles del Equipo -->
+    <div id="modal-detalle" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm transition-opacity">
+        <div class="relative w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <!-- Cabecera del Modal -->
+            <div class="flex items-center justify-between bg-clinica-900 px-6 py-4 text-white">
+                <div>
+                    <span id="modal-categoria-badge" class="inline-block rounded-md bg-teal-500/30 px-2 py-0.5 text-xs font-medium text-teal-200">Categoría</span>
+                    <h3 id="modal-nombre" class="text-xl font-bold">Nombre del Equipo</h3>
+                    <p id="modal-id" class="text-xs text-slate-300">ID: ---</p>
+                </div>
+                <button id="btn-cerrar-modal" type="button" class="rounded-lg p-1.5 text-slate-300 hover:bg-white/10 hover:text-white">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Cuerpo del Modal -->
+            <div class="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+                <!-- Información General -->
+                <div class="grid grid-cols-2 gap-4 text-sm md:grid-cols-3">
+                    <div class="rounded-xl bg-slate-50 p-3 border border-slate-100">
+                        <p class="text-xs text-slate-500 uppercase font-semibold">Marca</p>
+                        <p id="modal-marca" class="font-medium text-slate-800">—</p>
+                    </div>
+                    <div class="rounded-xl bg-slate-50 p-3 border border-slate-100">
+                        <p class="text-xs text-slate-500 uppercase font-semibold">Modelo</p>
+                        <p id="modal-modelo" class="font-medium text-slate-800">—</p>
+                    </div>
+                    <div class="rounded-xl bg-slate-50 p-3 border border-slate-100">
+                        <p class="text-xs text-slate-500 uppercase font-semibold">Número de Serie</p>
+                        <p id="modal-serie" class="font-medium text-slate-800">—</p>
+                    </div>
+                    <div class="rounded-xl bg-slate-50 p-3 border border-slate-100">
+                        <p class="text-xs text-slate-500 uppercase font-semibold">Ubicación</p>
+                        <p id="modal-ubicacion" class="font-medium text-slate-800">—</p>
+                    </div>
+                    <div class="rounded-xl bg-slate-50 p-3 border border-slate-100">
+                        <p class="text-xs text-slate-500 uppercase font-semibold">Nivel de Riesgo</p>
+                        <p id="modal-riesgo" class="font-medium text-slate-800">—</p>
+                    </div>
+                    <div class="rounded-xl bg-slate-50 p-3 border border-slate-100">
+                        <p class="text-xs text-slate-500 uppercase font-semibold">Estado Actual</p>
+                        <span id="modal-estado-badge" class="mt-1 inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset">
+                            —
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Historial de Mantenimiento / Hoja de Vida -->
+                <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-clinica-800 mb-2">Historial de Mantenimiento / Hoja de Vida</h4>
+                    <ul class="space-y-2 text-xs text-slate-600">
+                        <li class="flex justify-between items-center bg-white p-2.5 rounded-lg border border-slate-100">
+                            <span>Mantenimiento Preventivo Q3</span>
+                            <span class="text-slate-400 font-mono">2026-08-15</span>
+                        </li>
+                        <li class="flex justify-between items-center bg-white p-2.5 rounded-lg border border-slate-100">
+                            <span>Calibración Técnica de Rutina</span>
+                            <span class="text-slate-400 font-mono">2026-03-10</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Pie del Modal -->
+            <div class="bg-slate-50 px-6 py-3 flex justify-end border-t border-slate-100">
+                <button id="btn-cerrar-modal-footer" type="button" class="rounded-xl bg-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-300 transition">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api/equipos';
+        let equipos = [];
+
+        const tabla = document.getElementById('tabla-equipos');
+        const busqueda = document.getElementById('busqueda');
+        const estadoCarga = document.getElementById('estado-carga');
+        const sinResultados = document.getElementById('sin-resultados');
+        const modal = document.getElementById('modal-detalle'); // Seleccionamos el modal
+
+        function escapeHtml(texto) {
+            return String(texto ?? '').replace(/[&<>"']/g, (caracter) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[caracter]));
+        }
+
+        function normalizar(texto) {
+            return String(texto || '').toLowerCase().trim();
+        }
+
+        function claseEstado(estado) {
+            const valor = normalizar(estado);
+            if (valor.includes('operativ')) {
+                return 'bg-emerald-100 text-emerald-800 ring-emerald-200';
+            }
+            if (valor.includes('manten')) {
+                return 'bg-amber-100 text-amber-800 ring-amber-200';
+            }
+            if (valor.includes('fuera') || valor.includes('inactiv') || valor.includes('baja')) {
+                return 'bg-rose-100 text-rose-800 ring-rose-200';
+            }
+            return 'bg-slate-100 text-slate-700 ring-slate-200';
+        }
+
+        function actualizarResumen(lista) {
+            const total = lista.length;
+            const operativos = lista.filter((equipo) => normalizar(equipo.estado).includes('operativ')).length;
+            const mantenimiento = lista.filter((equipo) => normalizar(equipo.estado).includes('manten')).length;
+
+            document.getElementById('total-equipos').textContent = total;
+            document.getElementById('total-operativos').textContent = operativos;
+            document.getElementById('total-mantenimiento').textContent = mantenimiento;
+        }
+
+        // --- NUEVA FUNCIÓN RENDERIZARTABLA ---
+        function renderizarTabla(lista) {
+            tabla.innerHTML = '';
+            sinResultados.classList.toggle('hidden', lista.length > 0);
+
+            lista.forEach((equipo) => {
+                const fila = document.createElement('tr');
+                fila.className = 'hover:bg-clinica-50/70 cursor-pointer transition-colors'; // Añadido cursor-pointer
+                fila.title = 'Haz clic para ver la ficha detallada'; // Tooltip
+                fila.innerHTML = `
+                    <td class="whitespace-nowrap px-4 py-3 font-medium text-clinica-800">${escapeHtml(equipo.id_equipo)}</td>
+                    <td class="px-4 py-3 font-medium text-slate-900">${escapeHtml(equipo.nombre_equipo)}</td>
+                    <td class="px-4 py-3">${escapeHtml(equipo.marca)}</td>
+                    <td class="px-4 py-3">${escapeHtml(equipo.modelo)}</td>
+                    <td class="px-4 py-3">${escapeHtml(equipo.ubicacion)}</td>
+                    <td class="px-4 py-3">
+                        <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${claseEstado(equipo.estado)}">
+                            ${escapeHtml(equipo.estado || 'Sin estado')}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3">${escapeHtml(equipo.tipo_categoria)}</td>
+                `;
+
+                // Evento click en la fila para abrir el modal
+                fila.addEventListener('click', () => abrirModalDetalle(equipo));
+                
+                tabla.appendChild(fila);
+            });
+        }
+
+        // --- FUNCIONES DEL MODAL ---
+        function abrirModalDetalle(equipo) {
+            document.getElementById('modal-nombre').textContent = equipo.nombre_equipo || 'Sin nombre';
+            document.getElementById('modal-id').textContent = `ID: ${equipo.id_equipo || 'N/A'}`;
+            document.getElementById('modal-categoria-badge').textContent = equipo.tipo_categoria || 'General';
+            document.getElementById('modal-marca').textContent = equipo.marca || 'N/A';
+            document.getElementById('modal-modelo').textContent = equipo.modelo || 'N/A';
+            document.getElementById('modal-serie').textContent = equipo.numero_serie || 'N/A';
+            document.getElementById('modal-ubicacion').textContent = equipo.ubicacion || 'N/A';
+            document.getElementById('modal-riesgo').textContent = equipo.nivel_riesgo || 'N/A';
+
+            const badgeEstado = document.getElementById('modal-estado-badge');
+            badgeEstado.textContent = equipo.estado || 'Sin estado';
+            badgeEstado.className = `mt-1 inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${claseEstado(equipo.estado)}`;
+
+            modal.classList.remove('hidden');
+        }
+
+        function cerrarModalDetalle() {
+            modal.classList.add('hidden');
+        }
+
+        // Eventos para cerrar el modal
+        document.getElementById('btn-cerrar-modal').addEventListener('click', cerrarModalDetalle);
+        document.getElementById('btn-cerrar-modal-footer').addEventListener('click', cerrarModalDetalle);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) cerrarModalDetalle();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !modal.classList.contains('hidden')) cerrarModalDetalle();
+        });
+
+        function filtrarEquipos() {
+            const termino = normalizar(busqueda.value);
+            const filtrados = equipos.filter((equipo) => {
+                const texto = [
+                    equipo.id_equipo,
+                    equipo.nombre_equipo,
+                    equipo.marca,
+                    equipo.modelo,
+                    equipo.ubicacion,
+                    equipo.estado,
+                    equipo.tipo_categoria
+                ].map(normalizar).join(' ');
+                return texto.includes(termino);
+            });
+            renderizarTabla(filtrados);
+        }
+
+        async function cargarEquipos() {
+            estadoCarga.textContent = 'Cargando inventario…';
+            try {
+                const respuesta = await fetch(API_URL);
+                if (!respuesta.ok) {
+                    throw new Error('No se pudo obtener el inventario');
+                }
+                equipos = await respuesta.json();
+                actualizarResumen(equipos);
+                filtrarEquipos();
+                estadoCarga.textContent = `${equipos.length} equipos registrados en la base de datos biomant.`;
+            } catch (error) {
+                console.error(error);
+                equipos = [];
+                actualizarResumen([]);
+                renderizarTabla([]);
+                estadoCarga.textContent = 'No se pudo conectar con la API. Verifique que el servidor esté en http://localhost:3000.';
+            }
+        }
+
+        // Función para manejar el envío del formulario
+        document.getElementById('form-nuevo-equipo').addEventListener('submit', async (e) => {
+            e.preventDefault(); // Evita que la página se recargue
+
+            const datos = {
+                id_equipo: document.getElementById('id_equipo').value,
+                nombre_equipo: document.getElementById('nombre_equipo').value,
+                marca: document.getElementById('marca').value,
+                modelo: document.getElementById('modelo').value,
+                numero_serie: document.getElementById('numero_serie').value,
+                nivel_riesgo: document.getElementById('nivel_riesgo').value,
+                ubicacion: document.getElementById('ubicacion').value,
+                estado: document.getElementById('estado').value,
+                tipo_categoria: document.getElementById('tipo_categoria').value
+            };
+
+            try {
+                const respuesta = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datos)
+                });
+
+                if (respuesta.ok) {
+                    alert('Equipo registrado exitosamente');
+                    document.getElementById('form-nuevo-equipo').reset(); // Limpia el formulario
+                    cargarEquipos(); // Recarga la tabla de equipos al instante
+                } else {
+                    const error = await respuesta.json();
+                    alert(`Error: ${error.error}`);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('No se pudo conectar con el servidor.');
+            }
+        });
+
+        busqueda.addEventListener('input', filtrarEquipos);
+        document.getElementById('btn-actualizar').addEventListener('click', cargarEquipos);
+        document.addEventListener('DOMContentLoaded', cargarEquipos);
+    </script>
+</body>
+</html>
